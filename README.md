@@ -32,5 +32,6 @@ The following libraries are needed to work with the MS5351M and SPI colour LCD:
 
 ![Populated PCB](/HySSB_Populated_PCB.jpg?raw=true "PCB")
 
-Short video of spectrum display:
+# Short video of spectrum display
+
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/Xhs8i59NhmU/0.jpg)](https://www.youtube.com/watch?v=Xhs8i59NhmU)
