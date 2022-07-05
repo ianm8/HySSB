@@ -24,4 +24,4 @@ Here is the "Additional Boards Manager URL" for quick start:
 https://github.com/earlephilhower/arduino-pico/releases/download/global/package_rp2040_index.json
 
 # Libraries Used
-The following libraries are needed to work with the MS5351M and the analog inputs:
+The following libraries are needed to work with the MS5351M and SPI colour LCD:
