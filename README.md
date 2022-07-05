@@ -1,5 +1,5 @@
 # HySSB
-Hybrid Single Sideband Trnasceiver
+Hybrid Single Sideband Transceiver
 
 This is the firmware and design files for a multiband hybrid single sideband (SSB) transceiver for the traditional amateur bands. Bands covered are 80M, 40M, 20M, 15M, and 10M.
 
