@@ -25,3 +25,6 @@ https://github.com/earlephilhower/arduino-pico/releases/download/global/package_
 
 # Libraries Used
 The following libraries are needed to work with the MS5351M and SPI colour LCD:
+
+
+![Populated PCB](/ianm8/HySSB/blob/main/HySSB_Populated_PCB.jpg?raw=true "PCB")
