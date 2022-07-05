@@ -3,6 +3,8 @@ Hybrid Single Sideband Transceiver
 
 This is the firmware and design files for a multiband hybrid single sideband (SSB) transceiver for the traditional amateur bands. Bands covered are 80M, 40M, 20M, 15M, and 10M.
 
+73, VK7IAN
+
 # Build Environment
 
 Built using the Pi Pico arduino environment by Earle F. Philhower, III. See install details at:
