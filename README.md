@@ -21,7 +21,7 @@ The following libraries are needed to work with the MS5351M and SPI colour LCD:
 
 # Circuit Description
 
-The HySSB is a single conversion superhet with an IF of ~11.06MHz. There are 3 bandpass filters at 3KHz, 2.4KHz and 400Hz. The spectrum display is implemented using a quadrature sampling detector (QSD) after the first mixer and before the crystal filter. A 6db resistive splitter routes the signal to the crystal filter and the QSD. The QSD operates at 4 times the BFO frequency. The I and Q outputs of the QSD are sampled by the ADC in the Pi Pico microcontroller at 250Khz (interleaved). The uC performes a 1024 point complex FFT from which the magnitude of the signal is used to generate the sprectum and waterfall display.
+The HySSB is a single conversion superhet with an IF of ~11.06MHz. There are 3 bandpass filters at 3KHz, 2.4KHz and 400Hz. The spectrum display is implemented using a quadrature sampling detector (QSD) after the first mixer and before the crystal filter. A 6db resistive splitter routes the signal to the crystal filter and the QSD. The QSD operates at 4 times the BFO frequency. The I and Q outputs of the QSD are sampled by the ADC in the Pi Pico microcontroller at 250Khz (interleaved). The uC performs a 1024 point complex FFT from which the magnitude of the signal is used to generate the sprectrum and waterfall display.
 
 # Some Pics
 
