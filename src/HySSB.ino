@@ -1821,6 +1821,8 @@ void loop(void)
             radio.frequency = band_save[new_band].frequency;
             radio.tuning_step = band_save[new_band].tuning_step;
             radio.mode = band_save[new_band].mode;
+            multifunc.new_value_mode = radio.mode;
+            multifunc.current_value_mode = radio.mode;
             multifunc.new_value_atten = band_save[new_band].atten;
             switch (radio.mode)
             {
