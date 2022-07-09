@@ -3,6 +3,7 @@
  * HySSB007 - mute mic on receive (mic feeds back via mixer on receive!)
  * HySSB008 - mode changes
  * HySSB009 - CW 10 bits, spectrum zooming
+ * HySSB010 - CW Speed
  * 
  * libraries used:
  *   https://github.com/etherkit/Si5351Arduino
@@ -120,7 +121,8 @@ enum functions_t
   FUNCTION_MODE,
   FUNCTION_LOCK,
   FUNCTION_ATTN,
-  FUNCTION_BSCP
+  FUNCTION_BSCP,
+  FUNCTION_CWSP
 };
 
 enum lock_t
@@ -133,6 +135,31 @@ enum atten_t
 {
   ATTN_ON,
   ATTN_OFF
+};
+
+enum wpm_t
+{
+  CW_WPM_10,
+  CW_WPM_11,
+  CW_WPM_12,
+  CW_WPM_13,
+  CW_WPM_14,
+  CW_WPM_15,
+  CW_WPM_16,
+  CW_WPM_17,
+  CW_WPM_18,
+  CW_WPM_19,
+  CW_WPM_20,
+  CW_WPM_21,
+  CW_WPM_22,
+  CW_WPM_23,
+  CW_WPM_24,
+  CW_WPM_25,
+  CW_WPM_26,
+  CW_WPM_27,
+  CW_WPM_28,
+  CW_WPM_29,
+  CW_WPM_30
 };
 
 enum scopeoption_t
@@ -174,6 +201,8 @@ struct multifunc_t
   lock_t new_value_lock;
   atten_t current_value_atten;
   atten_t new_value_atten;
+  wpm_t current_value_wpm;
+  wpm_t new_value_wpm;
   scopeoption_t current_value_scopeoption;
   scopeoption_t new_value_scopeoption;
   boolean highlight;
@@ -276,6 +305,8 @@ static multifunc_t multifunc =
   UNLOCKED,
   ATTN_OFF,
   ATTN_OFF,
+  CW_WPM_20,
+  CW_WPM_20,
   SCOPE_SPEED_1,
   SCOPE_SPEED_1,
   false,
@@ -1003,6 +1034,7 @@ static void show_multifunc(void)
     case FUNCTION_LOCK: sz_func = "LCK"; break;
     case FUNCTION_ATTN: sz_func = "ATT"; break;
     case FUNCTION_BSCP: sz_func = "SCP"; break;
+    case FUNCTION_CWSP: sz_func = "WPM"; break;
   }
   spr.print(sz_func);
 }
@@ -1077,6 +1109,34 @@ static void show_multifunc_value(void)
         case SCOPE_ZOOM_0:  spr.print("Zoom: 0");  break;
         case SCOPE_ZOOM_1:  spr.print("Zoom: 1");  break;
         case SCOPE_ZOOM_2:  spr.print("Zoom: 2");  break;
+      }
+      break;
+    }
+    case FUNCTION_CWSP:
+    {
+      switch (multifunc.new_value_wpm)
+      {
+        case CW_WPM_10: spr.print("WPM: 10"); break;
+        case CW_WPM_11: spr.print("WPM: 11"); break;
+        case CW_WPM_12: spr.print("WPM: 12"); break;
+        case CW_WPM_13: spr.print("WPM: 13"); break;
+        case CW_WPM_14: spr.print("WPM: 14"); break;
+        case CW_WPM_15: spr.print("WPM: 15"); break;
+        case CW_WPM_16: spr.print("WPM: 16"); break;
+        case CW_WPM_17: spr.print("WPM: 17"); break;
+        case CW_WPM_18: spr.print("WPM: 18"); break;
+        case CW_WPM_19: spr.print("WPM: 19"); break;
+        case CW_WPM_20: spr.print("WPM: 20"); break;
+        case CW_WPM_21: spr.print("WPM: 21"); break;
+        case CW_WPM_22: spr.print("WPM: 22"); break;
+        case CW_WPM_23: spr.print("WPM: 23"); break;
+        case CW_WPM_24: spr.print("WPM: 24"); break;
+        case CW_WPM_25: spr.print("WPM: 25"); break;
+        case CW_WPM_26: spr.print("WPM: 26"); break;
+        case CW_WPM_27: spr.print("WPM: 27"); break;
+        case CW_WPM_28: spr.print("WPM: 28"); break;
+        case CW_WPM_29: spr.print("WPM: 29"); break;
+        case CW_WPM_30: spr.print("WPM: 30"); break;
       }
       break;
     }
@@ -1780,6 +1840,7 @@ void loop(void)
         multifunc.new_value_band = multifunc.current_value_band;
         multifunc.new_value_mode = multifunc.current_value_mode;
         multifunc.new_value_lock = multifunc.current_value_lock;
+        multifunc.new_value_wpm = multifunc.current_value_wpm;
         multifunc.state = FUNCTION_STATE_VALUE_CHANGE;
         multifunc.timeout = millis()+MULTIFUNCTION_TIMEOUT;
         break;
@@ -1906,12 +1967,41 @@ void loop(void)
               case SCOPE_ZOOM_2:  radio.scope_zoom  = 2u; break;
             }
           }
+          // CW speed
+          if (multifunc.new_value_wpm!=multifunc.current_value_wpm)
+          {
+            switch (multifunc.new_value_wpm)
+            {
+              case CW_WPM_10: cw_dit = 1000*60/(50*10); break;
+              case CW_WPM_11: cw_dit = 1000*60/(50*11); break;
+              case CW_WPM_12: cw_dit = 1000*60/(50*12); break;
+              case CW_WPM_13: cw_dit = 1000*60/(50*13); break;
+              case CW_WPM_14: cw_dit = 1000*60/(50*14); break;
+              case CW_WPM_15: cw_dit = 1000*60/(50*15); break;
+              case CW_WPM_16: cw_dit = 1000*60/(50*16); break;
+              case CW_WPM_17: cw_dit = 1000*60/(50*17); break;
+              case CW_WPM_18: cw_dit = 1000*60/(50*18); break;
+              case CW_WPM_19: cw_dit = 1000*60/(50*19); break;
+              case CW_WPM_20: cw_dit = 1000*60/(50*20); break;
+              case CW_WPM_21: cw_dit = 1000*60/(50*21); break;
+              case CW_WPM_22: cw_dit = 1000*60/(50*22); break;
+              case CW_WPM_23: cw_dit = 1000*60/(50*23); break;
+              case CW_WPM_24: cw_dit = 1000*60/(50*24); break;
+              case CW_WPM_25: cw_dit = 1000*60/(50*25); break;
+              case CW_WPM_26: cw_dit = 1000*60/(50*26); break;
+              case CW_WPM_27: cw_dit = 1000*60/(50*27); break;
+              case CW_WPM_28: cw_dit = 1000*60/(50*28); break;
+              case CW_WPM_29: cw_dit = 1000*60/(50*29); break;
+              case CW_WPM_30: cw_dit = 1000*60/(50*30); break;
+            }
+          }
           multifunc.value_change = FUNCTION_NONE;
           // current value becomes new value
           multifunc.current_value_band = multifunc.new_value_band;
           multifunc.current_value_mode = multifunc.new_value_mode;
           multifunc.current_value_lock = multifunc.new_value_lock;
           multifunc.current_value_atten = multifunc.new_value_atten;
+          multifunc.current_value_wpm = multifunc.new_value_wpm;
           multifunc.current_value_scopeoption = multifunc.new_value_scopeoption;
           multifunc.new_function = multifunc.current_function;
           multifunc.highlight = false;
@@ -2003,6 +2093,35 @@ void loop(void)
               }
               break;
             }
+            case FUNCTION_CWSP:
+            {
+              // CW WPM
+              switch (multifunc.new_value_wpm)
+              {
+                case CW_WPM_10: multifunc.new_value_wpm = CW_WPM_11;  break;
+                case CW_WPM_11: multifunc.new_value_wpm = CW_WPM_12;  break;
+                case CW_WPM_12: multifunc.new_value_wpm = CW_WPM_13;  break;
+                case CW_WPM_13: multifunc.new_value_wpm = CW_WPM_14;  break;
+                case CW_WPM_14: multifunc.new_value_wpm = CW_WPM_15;  break;
+                case CW_WPM_15: multifunc.new_value_wpm = CW_WPM_16;  break;
+                case CW_WPM_16: multifunc.new_value_wpm = CW_WPM_17;  break;
+                case CW_WPM_17: multifunc.new_value_wpm = CW_WPM_18;  break;
+                case CW_WPM_18: multifunc.new_value_wpm = CW_WPM_19;  break;
+                case CW_WPM_19: multifunc.new_value_wpm = CW_WPM_20;  break;
+                case CW_WPM_20: multifunc.new_value_wpm = CW_WPM_21;  break;
+                case CW_WPM_21: multifunc.new_value_wpm = CW_WPM_22;  break;
+                case CW_WPM_22: multifunc.new_value_wpm = CW_WPM_23;  break;
+                case CW_WPM_23: multifunc.new_value_wpm = CW_WPM_24;  break;
+                case CW_WPM_24: multifunc.new_value_wpm = CW_WPM_25;  break;
+                case CW_WPM_25: multifunc.new_value_wpm = CW_WPM_26;  break;
+                case CW_WPM_26: multifunc.new_value_wpm = CW_WPM_27;  break;
+                case CW_WPM_27: multifunc.new_value_wpm = CW_WPM_28;  break;
+                case CW_WPM_28: multifunc.new_value_wpm = CW_WPM_29;  break;
+                case CW_WPM_29: multifunc.new_value_wpm = CW_WPM_30;  break;
+                case CW_WPM_30: multifunc.new_value_wpm = CW_WPM_10;  break;
+              }
+              break;
+            }
           }
         }
         else
@@ -2069,6 +2188,35 @@ void loop(void)
                 case SCOPE_ZOOM_1:  multifunc.new_value_scopeoption = SCOPE_ZOOM_0;  break;
                 case SCOPE_ZOOM_0:  multifunc.new_value_scopeoption = SCOPE_SPEED_1; break;
               }
+            }
+            case FUNCTION_CWSP:
+            {
+              // CW WPM
+              switch (multifunc.new_value_wpm)
+              {
+                case CW_WPM_10: multifunc.new_value_wpm = CW_WPM_30;  break;
+                case CW_WPM_11: multifunc.new_value_wpm = CW_WPM_10;  break;
+                case CW_WPM_12: multifunc.new_value_wpm = CW_WPM_11;  break;
+                case CW_WPM_13: multifunc.new_value_wpm = CW_WPM_12;  break;
+                case CW_WPM_14: multifunc.new_value_wpm = CW_WPM_13;  break;
+                case CW_WPM_15: multifunc.new_value_wpm = CW_WPM_14;  break;
+                case CW_WPM_16: multifunc.new_value_wpm = CW_WPM_15;  break;
+                case CW_WPM_17: multifunc.new_value_wpm = CW_WPM_16;  break;
+                case CW_WPM_18: multifunc.new_value_wpm = CW_WPM_17;  break;
+                case CW_WPM_19: multifunc.new_value_wpm = CW_WPM_18;  break;
+                case CW_WPM_20: multifunc.new_value_wpm = CW_WPM_19;  break;
+                case CW_WPM_21: multifunc.new_value_wpm = CW_WPM_20;  break;
+                case CW_WPM_22: multifunc.new_value_wpm = CW_WPM_21;  break;
+                case CW_WPM_23: multifunc.new_value_wpm = CW_WPM_22;  break;
+                case CW_WPM_24: multifunc.new_value_wpm = CW_WPM_23;  break;
+                case CW_WPM_25: multifunc.new_value_wpm = CW_WPM_24;  break;
+                case CW_WPM_26: multifunc.new_value_wpm = CW_WPM_25;  break;
+                case CW_WPM_27: multifunc.new_value_wpm = CW_WPM_26;  break;
+                case CW_WPM_28: multifunc.new_value_wpm = CW_WPM_27;  break;
+                case CW_WPM_29: multifunc.new_value_wpm = CW_WPM_28;  break;
+                case CW_WPM_30: multifunc.new_value_wpm = CW_WPM_29;  break;
+              }
+              break;
             }
           }
         }
@@ -2194,6 +2342,7 @@ void loop(void)
   }
   else
   {
+    
     show_old_spectrum();
   }
 
