@@ -19,8 +19,8 @@ class Si5351A: public Si5351 {                                                  
     static const uint16_t NUM_MODES = 6;                                                  // Number of modes
     static const uint16_t NUM_BANDS = 5;                                                  // Number of bands
     enum modes_t {LSB, USB, CWL, CWU, DIGL, DIGU};                                        // Modes
-    //uint32_t bfos[NUM_MODES] = {11056700, 11059300, 11056500, 11057900, 11056900, 11060300}; // BFO frequencies for each mode
-    const uint32_t bfos[NUM_MODES] = {11056600, 11059300, 11056500, 11057900, 11056900, 11060300}; // BFO frequencies for each mode
+  //const uint32_t bfos[NUM_MODES] = {11056700, 11059300, 11056500, 11057900, 11056900, 11060300}; // BFO frequencies for each mode
+    const uint32_t bfos[NUM_MODES] = {11056600, 11059300, 11056500, 11057900, 11056700, 11060500}; // BFO frequencies for each mode
     const uint8_t wavelengths[NUM_BANDS] = {80, 40, 20, 15, 10};                                // Wavelength for each band
     const uint32_t bandMin[NUM_BANDS] = {3500000, 7000000, 14000000, 21000000, 28000000};       // Band min frequency
     const uint32_t bandMax[NUM_BANDS] = {3800000, 7300000, 14350000, 21450000, 29700000};       // Band max frequency
