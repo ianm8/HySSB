@@ -1,8 +1,8 @@
 #include "Arduino.h"
 #include "Radio.h"
-#include <Rotary.h>
-#include <TCA9534.h>
+#include "TCA9534A.h"
 #include "cw.h"
+#include <Rotary.h>
 
 #define BAND_I2C_ADDRESS   0x20U
 #define FILTER_I2C_ADDRESS 0x21U
@@ -27,7 +27,6 @@ Radio::Radio(
   Radio::band = _band;
   Radio::scope_speed = 1;
   Radio::scope_zoom = 0;
-////
   Radio::_i2c_band_error = false;
   Radio::_i2c_filter_error = false;
   //Radio::_i2c_band_error = true;
@@ -44,18 +43,6 @@ Radio::Radio(
 
 void Radio::init(void)
 {
-////
-/*  
-  pinMode(LED_BUILTIN,OUTPUT);
-  for (uint32_t i=0;i<2;i++)
-  {
-    digitalWrite(LED_BUILTIN,HIGH);
-    delay(50);
-    digitalWrite(LED_BUILTIN,LOW);
-    delay(500);
-  }
-  delay(2000);
-*/
   pinMode(PIN_PTT,INPUT_PULLUP);      // Mic - PTT *
   pinMode(PIN_TP10,INPUT_PULLUP);     // spare pin - enable pull up
   pinMode(PIN_PADA,INPUT);            // CW paddle A
@@ -86,7 +73,6 @@ void Radio::init(void)
   digitalWrite(PIN_CWSIDETONE,LOW);
   digitalWrite(PIN_CWTONE,LOW);
 
-////
   Wire.begin();
   Wire.beginTransmission(BAND_I2C_ADDRESS);
   volatile uint32_t i2c_status = Wire.endTransmission();
@@ -124,18 +110,6 @@ void Radio::init(void)
       delay(2000);
     }
   }
-
-/*
-  pinMode(LED_BUILTIN,OUTPUT);
-  for (uint32_t i=0;i<2;i++)
-  {
-    digitalWrite(LED_BUILTIN,HIGH);
-    delay(50);
-    digitalWrite(LED_BUILTIN,LOW);
-    delay(500);
-  }
-  delay(2000);
-*/
   if (!Radio::_i2c_band_error && !Radio::_i2c_filter_error)
   {
     band_io.attach(Wire);
@@ -161,18 +135,6 @@ void Radio::init(void)
     filter_io.output(FILTER_BIT_SP2,TCA9534::Level::L);
     filter_io.output(FILTER_BIT_SP3,TCA9534::Level::L);
   }
-////
-/*  
-  pinMode(LED_BUILTIN,OUTPUT);
-  for (uint32_t i=0;i<2;i++)
-  {
-    digitalWrite(LED_BUILTIN,HIGH);
-    delay(50);
-    digitalWrite(LED_BUILTIN,LOW);
-    delay(500);
-  }
-  delay(2000);
-*/
   Radio::muteMic();
   Radio::setBand(Radio::band);
   Radio::setFilter(Radio::FILTER_SSB);
