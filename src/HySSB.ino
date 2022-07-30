@@ -1,15 +1,17 @@
 /*
+ * HySSB Copyright 2022 Ian Mitchell VK7IAN Version 1.0
+ *
  * HySSB006 - first working version SSB only
  * HySSB007 - mute mic on receive (mic feeds back via mixer on receive!)
  * HySSB008 - mode changes
  * HySSB009 - CW 10 bits, spectrum zooming
  * HySSB010 - CW Speed
+ * HySSB011 - EEPROM save and digital mode BFO change by +/-100Hz
  * 
  * libraries used:
  *   https://github.com/etherkit/Si5351Arduino
  *   https://github.com/Bodmer/TFT_eSPI
  *   https://github.com/brianlow/Rotary
- *   https://github.com/hideakitai/TCA9534
  *
  * NOTE: copy User_Setup.h to ..\Arduino\libraries\TFT_eSPI-master 
  * after first install or if the library is updated
@@ -32,12 +34,16 @@
 #include "Radio.h"
 #include "Spectrum.h"
 #include "si5351A.h"
+#include <EEPROM.h>
 #include <TFT_eSPI.h>                 
 
 #define CALL_SIGN "VK7IAN"
+#define VERSION "1.0"
+#define CW_SPEED_DEFAULT 60ul;
 #define CW_TIMEOUT 800UL
 #define MULTIFUNCTION_TIMEOUT 4000UL
 #define MESSAGE_TIMEOUT 3000UL
+
 
 #define WATERFALL_ROWS 41
 
@@ -209,15 +215,6 @@ struct multifunc_t
   uint32_t timeout;
 };
 
-////
-/*
-struct message_t
-{
-  enum messages_t {MESSAGE_NO_MESSAGE,MESSAGE_LOCKED} message;
-  //messages_t message;
-  uint32_t timeout;
-};
-*/
 struct message_t
 {
   messages_t message;
@@ -281,7 +278,7 @@ static const uint16_t color_map_32[32] =
   0xff00  // red
 };
 
-static uint32_t cw_dit = 60ul;
+static uint32_t cw_dit = CW_SPEED_DEFAULT;
 static state_t radio_state = STATE_LSB_RECEIVE_INIT;
 static state_t saved_state = STATE_NO_STATE;
 static state_t next_state = STATE_NO_STATE;
@@ -348,7 +345,7 @@ TFT_eSprite spr = TFT_eSprite(&tft);
 
 // if an error occurs during startup, flash
 // the error number on the LED
-void error_stop(const uint32_t _errno)
+static void error_stop(const uint32_t _errno)
 {
   for (;;)
   {
@@ -363,38 +360,48 @@ void error_stop(const uint32_t _errno)
   }
 }
 
-// TODO: move to object?
 static bool process_radio_callback(repeating_timer_t *rt)
 {
   radio.process();
   return true;
 }
 
-////
-void test_lcd(const uint32_t f)
+static void save_settings(void)
 {
-  spr.fillSprite(TFT_BLACK);
-  spr.drawLine(0, 0, WIDTH-1, HEIGHT-1, TFT_GREEN);
-  spr.drawPixel(2,10,TFT_RED);
-  spr.drawRect(50,50,10,10,TFT_BLUE);
-  //spr.drawString("Sprite",100,10,4);
-  //spr.drawString("VK7IAN",100,30,3);
-  spr.drawString("VK7IAN",100,50,2);
-  //spr.drawString("VK7IAN",100,70,1);
-  spr.setTextSize(3);
-  //spr.setTextColor(radio.locked()?TFT_RED:TFT_WHITE,TFT_BLACK);
-  spr.setTextColor(TFT_WHITE,TFT_BLACK);
-  spr.setCursor(80,0);
-  spr.print(f);
-  spr.pushSprite(0,0);
+  EEPROM.begin(256);
+  EEPROM.write(0,(uint8_t)radio.scope_speed);
+  EEPROM.write(1,(uint8_t)radio.scope_zoom);
+  EEPROM.write(2,(uint8_t)cw_dit);
+  EEPROM.commit();
+  EEPROM.end();
+}
+
+static void restore_settings(void)
+{
+  EEPROM.begin(256);
+  radio.scope_speed = EEPROM.read(0);
+  radio.scope_zoom = EEPROM.read(1);
+  cw_dit = EEPROM.read(2);
+  EEPROM.end();
+  if (radio.scope_speed<0 ||
+    radio.scope_speed>8 ||
+    radio.scope_zoom<0 ||
+    radio.scope_zoom>3 ||
+    cw_dit<40 ||
+    cw_dit>120)
+  {
+    radio.scope_speed = 1;
+    radio.scope_zoom = 0;
+    cw_dit = CW_SPEED_DEFAULT;
+  }
 }
 
 void setup(void)
 {
+  // set pico regulator to low noise
   pinMode(23,OUTPUT);
   digitalWrite(23,HIGH);
   
-////
   pinMode(LED_BUILTIN,OUTPUT);
   for (uint32_t i=0;i<2;i++)
   {
@@ -406,17 +413,8 @@ void setup(void)
   delay(500);
 
   radio.init();
-////
-/*
-  if (radio.band_io_error())
-  {
-    error_stop(3U);
-  }
-  if (radio.filter_io_error())
-  {
-    error_stop(4U);
-  }
-*/
+  restore_settings();
+
   if (!add_repeating_timer_us(-1000LL, process_radio_callback, NULL, &radio_timer))
   {
     error_stop(5U);
@@ -434,7 +432,7 @@ void setup(void)
   // spr.setColorDepth(8);
 
   // Create a sprite of defined size
-  spr.createSprite(WIDTH, HEIGHT);
+  spr.createSprite(WIDTH,HEIGHT);
   spr.fillSprite(TFT_BLACK);
   spr.pushSprite(0,0);
   delay(2000);
@@ -520,8 +518,8 @@ static void show_mode()
     case Radio::USB: sz_mode = "USB"; break;
     case Radio::CWL: sz_mode = "CWL"; break;
     case Radio::CWU: sz_mode = "CWU"; break;
-    case Radio::DIGL: sz_mode = "DIGL"; break;
-    case Radio::DIGU: sz_mode = "DIGU"; break;
+    case Radio::DIGL: sz_mode = "DGL"; break;
+    case Radio::DIGU: sz_mode = "DGU"; break;
   }
   spr.print(sz_mode);
 }
@@ -553,6 +551,14 @@ static void show_attenuator(void)
     spr.setTextColor(TFT_BLACK);
     spr.setCursor(POS_ATT_X,POS_ATT_Y);
     spr.print("ATT");
+  }
+  else
+  {
+    spr.fillRect(POS_ATT_X-5,POS_ATT_Y-5,45,25,TFT_PURPLE);
+    spr.setTextSize(2);
+    spr.setTextColor(TFT_WHITE);
+    spr.setCursor(POS_ATT_X,POS_ATT_Y);
+    spr.print(VERSION);
   }
 }
 
@@ -1048,7 +1054,8 @@ static void show_multifunc_value(void)
   // show the multifunction value
   static const uint32_t message_width = 9*14;
   static const uint32_t pos_message_x = WIDTH/2-message_width/2;
-  spr.drawRect(pos_message_x,POS_MESSAGE_Y,message_width,24,TFT_WHITE);
+  spr.drawRect(pos_message_x-1,POS_MESSAGE_Y-1,message_width+2,26,TFT_WHITE);
+  //spr.drawRect(pos_message_x,POS_MESSAGE_Y,message_width,24,TFT_WHITE);
   spr.fillRect(pos_message_x+1,POS_MESSAGE_Y+1,message_width-2,22,TFT_BLACK);
   spr.setTextSize(2);
   spr.setTextColor(TFT_WHITE);
@@ -1075,8 +1082,8 @@ static void show_multifunc_value(void)
         case Radio::USB:  spr.print("Mode: USB"); break;
         case Radio::CWL:  spr.print("Mode: CWL"); break;
         case Radio::CWU:  spr.print("Mode: CWU"); break;
-        case Radio::DIGL: spr.print("Mode:DIGL"); break;
-        case Radio::DIGU: spr.print("Mode:DIGU"); break;
+        case Radio::DIGL: spr.print("Mode: DGL"); break;
+        case Radio::DIGU: spr.print("Mode: DGU"); break;
       }
       break;
     }
@@ -1157,8 +1164,9 @@ static void show_message(void)
   }
   if (message.timeout>millis())
   {
-    spr.drawRect(POS_MULTIVALUE_X,POS_MULTIVALUE_Y,160,24,TFT_WHITE);
-    spr.fillRect(POS_MULTIVALUE_X+1,POS_MULTIVALUE_Y+1,158,22,TFT_BLACK);
+    //spr.drawRect(POS_MULTIVALUE_X,POS_MULTIVALUE_Y,160,24,TFT_WHITE);
+    spr.fillRect(POS_MULTIVALUE_X,POS_MULTIVALUE_Y,160,24,TFT_WHITE);
+    spr.fillRect(POS_MULTIVALUE_X+2,POS_MULTIVALUE_Y+2,156,20,TFT_BLACK);
     spr.setTextSize(2);
     spr.setTextColor(TFT_WHITE);
     spr.setCursor(POS_MULTIVALUE_X+5,POS_MULTIVALUE_Y+5);
@@ -1184,8 +1192,7 @@ static void display_refresh(void)
 {
   spr.pushSprite(0,0);
 }
-////
-///*
+
 void loop1(void)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
 {
   spectrum.process(radio.scope_speed);
@@ -1206,7 +1213,7 @@ void loop1(void)
   // main loop can now use the data
   mutex_exit(&spectrum_mutex);
 }
-//*/
+
 void loop(void)
 {
   static uint32_t cwtimeout = 0;
@@ -1557,8 +1564,6 @@ void loop(void)
       }
       case STATE_CWL_TX_INIT:
       {
-////
-        //radio.cwMute();
         radio.muteMic();
         radio.txEnable();
         if (radio.PTT()) delay(30);
@@ -1568,8 +1573,6 @@ void loop(void)
       }
       case STATE_CWU_TX_INIT:
       {
-////
-        //radio.cwMute();
         radio.muteMic();
         radio.txEnable();
         if (radio.PTT()) delay(30);
@@ -1852,8 +1855,6 @@ void loop(void)
           // button is pressed,
           // activate the selected function
           // save the selected function
-//// TODO: update the radio band, mode or lock!   
-//// TODO: if changing band, save current stuff in band save var, then change to new band
           // band
           if (multifunc.new_value_band!=multifunc.current_value_band)
           {
@@ -1966,6 +1967,7 @@ void loop(void)
               case SCOPE_ZOOM_1:  radio.scope_zoom  = 1u; break;
               case SCOPE_ZOOM_2:  radio.scope_zoom  = 2u; break;
             }
+            save_settings();
           }
           // CW speed
           if (multifunc.new_value_wpm!=multifunc.current_value_wpm)
@@ -1994,6 +1996,7 @@ void loop(void)
               case CW_WPM_29: cw_dit = 1000*60/(50*29); break;
               case CW_WPM_30: cw_dit = 1000*60/(50*30); break;
             }
+            save_settings();
           }
           multifunc.value_change = FUNCTION_NONE;
           // current value becomes new value
@@ -2273,7 +2276,8 @@ void loop(void)
             case FUNCTION_MODE: multifunc.new_function = FUNCTION_LOCK; break;
             case FUNCTION_LOCK: multifunc.new_function = FUNCTION_ATTN; break;
             case FUNCTION_ATTN: multifunc.new_function = FUNCTION_BSCP; break;
-            case FUNCTION_BSCP: multifunc.new_function = FUNCTION_BAND; break;
+            case FUNCTION_BSCP: multifunc.new_function = FUNCTION_CWSP; break;
+            case FUNCTION_CWSP: multifunc.new_function = FUNCTION_BAND; break;
           }
           break;
         }
@@ -2282,11 +2286,12 @@ void loop(void)
           // move to previous function
           switch (multifunc.new_function)
           {
-            case FUNCTION_BAND: multifunc.new_function = FUNCTION_BSCP; break;
+            case FUNCTION_BAND: multifunc.new_function = FUNCTION_CWSP; break;
             case FUNCTION_MODE: multifunc.new_function = FUNCTION_BAND; break;
             case FUNCTION_LOCK: multifunc.new_function = FUNCTION_MODE; break;
             case FUNCTION_ATTN: multifunc.new_function = FUNCTION_LOCK; break;
             case FUNCTION_BSCP: multifunc.new_function = FUNCTION_ATTN; break;
+            case FUNCTION_CWSP: multifunc.new_function = FUNCTION_BSCP; break;
           }
           break;
         }
@@ -2314,7 +2319,7 @@ void loop(void)
   show_multifunc();
   show_attenuator();
   show_bandwidth();
-////
+
   // if we can access the spectrum data then
   // make a copy of it for display, otherwise
   // just use the last data set
@@ -2342,7 +2347,6 @@ void loop(void)
   }
   else
   {
-    
     show_old_spectrum();
   }
 
