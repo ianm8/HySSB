@@ -21,7 +21,6 @@ The following libraries are needed to work with the MS5351M and SPI colour LCD:
  * https://github.com/etherkit/Si5351Arduino
  * https://github.com/Bodmer/TFT_eSPI
  * https://github.com/brianlow/Rotary
- * https://github.com/hideakitai/TCA9534
 
 # Circuit Description
 
