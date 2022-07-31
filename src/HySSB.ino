@@ -1054,9 +1054,8 @@ static void show_multifunc_value(void)
   // show the multifunction value
   static const uint32_t message_width = 9*14;
   static const uint32_t pos_message_x = WIDTH/2-message_width/2;
-  spr.drawRect(pos_message_x-1,POS_MESSAGE_Y-1,message_width+2,26,TFT_WHITE);
-  //spr.drawRect(pos_message_x,POS_MESSAGE_Y,message_width,24,TFT_WHITE);
-  spr.fillRect(pos_message_x+1,POS_MESSAGE_Y+1,message_width-2,22,TFT_BLACK);
+  spr.fillRect(pos_message_x-1,POS_MESSAGE_Y-1,message_width+2,26,TFT_WHITE);
+  spr.fillRect(pos_message_x+1,POS_MESSAGE_Y+1,message_width-4,22,TFT_BLACK);
   spr.setTextSize(2);
   spr.setTextColor(TFT_WHITE);
   spr.setCursor(pos_message_x+8,POS_MESSAGE_Y+5);
