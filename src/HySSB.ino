@@ -7,6 +7,7 @@
  * HySSB009 - CW 10 bits, spectrum zooming
  * HySSB010 - CW Speed
  * HySSB011 - EEPROM save and digital mode BFO change by +/-100Hz
+ * HySSB012 - Show WPM on screan
  * 
  * libraries used:
  *   https://github.com/etherkit/Si5351Arduino
@@ -42,7 +43,7 @@
 #define CW_SPEED_DEFAULT 60ul;
 #define CW_TIMEOUT 800UL
 #define MULTIFUNCTION_TIMEOUT 4000UL
-#define MESSAGE_TIMEOUT 3000UL
+#define MESSAGE_TIMEOUT 2000UL
 
 
 #define WATERFALL_ROWS 41
@@ -63,10 +64,8 @@
 #define POS_ATT_Y          30
 #define POS_MULTI_X        55
 #define POS_MULTI_Y        30
-#define POS_MULTIVALUE_X   30
-#define POS_MULTIVALUE_Y   90
-#define POS_MESSAGE_X      80
-#define POS_MESSAGE_Y      65
+#define POS_MULTIVALUE_X   80
+#define POS_MULTIVALUE_Y   65
 #define POS_METER_X       100
 #define POS_METER_Y        25
 #define POS_TUNING_STEP_X 140
@@ -551,6 +550,37 @@ static void show_attenuator(void)
     spr.setTextColor(TFT_BLACK);
     spr.setCursor(POS_ATT_X,POS_ATT_Y);
     spr.print("ATT");
+  }
+  else if (radio.mode==Radio::CWL || radio.mode==Radio::CWU)
+  {
+    spr.fillRect(POS_ATT_X-5,POS_ATT_Y-5,45,25,TFT_PURPLE);
+    spr.setTextSize(2);
+    spr.setTextColor(TFT_WHITE);
+    spr.setCursor(POS_ATT_X,POS_ATT_Y);
+    switch (multifunc.current_value_wpm)
+    {
+      case CW_WPM_10: spr.print("10"); break;
+      case CW_WPM_11: spr.print("11"); break;
+      case CW_WPM_12: spr.print("12"); break;
+      case CW_WPM_13: spr.print("13"); break;
+      case CW_WPM_14: spr.print("14"); break;
+      case CW_WPM_15: spr.print("15"); break;
+      case CW_WPM_16: spr.print("16"); break;
+      case CW_WPM_17: spr.print("17"); break;
+      case CW_WPM_18: spr.print("18"); break;
+      case CW_WPM_19: spr.print("19"); break;
+      case CW_WPM_20: spr.print("20"); break;
+      case CW_WPM_21: spr.print("21"); break;
+      case CW_WPM_22: spr.print("22"); break;
+      case CW_WPM_23: spr.print("23"); break;
+      case CW_WPM_24: spr.print("24"); break;
+      case CW_WPM_25: spr.print("25"); break;
+      case CW_WPM_26: spr.print("26"); break;
+      case CW_WPM_27: spr.print("27"); break;
+      case CW_WPM_28: spr.print("28"); break;
+      case CW_WPM_29: spr.print("29"); break;
+      case CW_WPM_30: spr.print("30"); break;
+    }
   }
   else
   {
@@ -1054,11 +1084,11 @@ static void show_multifunc_value(void)
   // show the multifunction value
   static const uint32_t message_width = 9*14;
   static const uint32_t pos_message_x = WIDTH/2-message_width/2;
-  spr.fillRect(pos_message_x-1,POS_MESSAGE_Y-1,message_width+2,26,TFT_WHITE);
-  spr.fillRect(pos_message_x+1,POS_MESSAGE_Y+1,message_width-4,22,TFT_BLACK);
+  spr.fillRect(pos_message_x-1,POS_MULTIVALUE_Y-1,message_width+2,26,TFT_WHITE);
+  spr.fillRect(pos_message_x+1,POS_MULTIVALUE_Y+1,message_width-4,22,TFT_BLACK);
   spr.setTextSize(2);
   spr.setTextColor(TFT_WHITE);
-  spr.setCursor(pos_message_x+8,POS_MESSAGE_Y+5);
+  spr.setCursor(pos_message_x+8,POS_MULTIVALUE_Y+5);
   switch (multifunc.new_function)
   {
     case FUNCTION_BAND:
@@ -1100,7 +1130,7 @@ static void show_multifunc_value(void)
       switch (multifunc.new_value_atten)
       {                           
         case ATTN_ON:  spr.print("Atten: On");  break;
-        case ATTN_OFF: spr.print("Atten: Off"); break;
+        case ATTN_OFF: spr.print("Atten:Off"); break;
       }
       break;
     }
@@ -1163,16 +1193,17 @@ static void show_message(void)
   }
   if (message.timeout>millis())
   {
-    //spr.drawRect(POS_MULTIVALUE_X,POS_MULTIVALUE_Y,160,24,TFT_WHITE);
-    spr.fillRect(POS_MULTIVALUE_X,POS_MULTIVALUE_Y,160,24,TFT_WHITE);
-    spr.fillRect(POS_MULTIVALUE_X+2,POS_MULTIVALUE_Y+2,156,20,TFT_BLACK);
+    static const uint32_t message_width = 9*14;
+    static const uint32_t pos_message_x = WIDTH/2-message_width/2;
+    spr.fillRect(pos_message_x,POS_MULTIVALUE_Y,message_width,24,TFT_WHITE);
+    spr.fillRect(pos_message_x+2,POS_MULTIVALUE_Y+2,message_width-4,20,TFT_BLACK);
     spr.setTextSize(2);
     spr.setTextColor(TFT_WHITE);
-    spr.setCursor(POS_MULTIVALUE_X+5,POS_MULTIVALUE_Y+5);
+    spr.setCursor(pos_message_x+8,POS_MULTIVALUE_Y+5);
     const char *sz_message = "";
     switch (message.message)
     {
-      case MESSAGE_LOCKED: sz_message = "LOCKED"; break;
+      case MESSAGE_LOCKED: sz_message = " LOCKED"; break;
     }
     spr.print(sz_message);
   }
