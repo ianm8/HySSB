@@ -156,13 +156,10 @@ void Radio::process(void)
   }
   else
   {
-    if (!Radio::_locked)
+    switch (tune.process())
     {
-      switch (tune.process())
-      {
-        case DIR_CW:  Radio::_tune_value++; break;
-        case DIR_CCW: Radio::_tune_value--; break;
-      }
+      case DIR_CW:  Radio::_tune_value++; break;
+      case DIR_CCW: Radio::_tune_value--; break;
     }
     switch (func.process())
     {
@@ -320,7 +317,7 @@ const int32_t Radio::Tune(void)
   // turned and reset the count
   // if transmitting then don't process rotaries and
   // don't disable interrupts!
-  if (Radio::_tx_enable||Radio::_locked)
+  if (Radio::_tx_enable)
   {
     return 0;
   }
