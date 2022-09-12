@@ -29,6 +29,8 @@ class Si5351A: public Si5351 {                                                  
     void setMode(modes_t mode);                                                           // Set the mode. Will automatically set the BFO frequency.
     bool setFreq(uint32_t freq);                                                          // Set the VFO frequency in Hz and set the Mode
     bool setFreq(uint32_t freq, modes_t mode);                                            // Set the VFO frequency in Hz and set the Mode
+    bool setRevFreq(uint32_t freq);                                                       // Set the VFO frequency in Hz and set the Mode (reverse sideband)
+    bool setRevFreq(uint32_t freq, modes_t mode);                                         // Set the VFO frequency in Hz and set the Mode (reverse sideband)
     uint8_t band;                                                                         // Current band index
     uint8_t wavelength;                                                                   // Current band wavelength
     modes_t mode;                                                                         // Current mode

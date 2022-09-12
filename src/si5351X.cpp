@@ -67,3 +67,26 @@ bool Si5351A::setFreq(uint32_t freq, modes_t mode) {  // Set the VFO frequency i
   setMode(mode);                                      // Set the mode, getting the BFO frequency
   return setFreq(freq);                               // Set the VFO frequency if it is in band. Return true if it is in band. 
 }
+
+bool Si5351A::setRevFreq(uint32_t freq) {             // Set the VFO frequency in Hz
+  if (_getBand(freq)) {                               // The frequency is in band
+    if (mode==CWL || mode==CWU)
+    {
+      vfo = freq + CW_FILTER_CENTRE;                  //  for CW, put the signal in the centre of the passband
+    }
+    else
+    {
+      vfo = freq - bfo;                               // Get the VFO frequency (note this reverses the sideband)
+    }
+    uint64_t si5351vfo = vfo * SI5351_FREQ_MULT;      // Get the si5351 CLK2 frequency
+    set_freq(si5351vfo, SI5351_CLK2);                 // Set the si5351 CLK2 frequency
+    return true;                                      // The frequency is in band
+  } else {
+    return false;                                     // The frequency is out of band
+  }
+}
+
+bool Si5351A::setRevFreq(uint32_t freq, modes_t mode) {  // Set the VFO frequency in Hz and set the Mode
+  setMode(mode);                                         // Set the mode, getting the BFO frequency
+  return setRevFreq(freq);                               // Set the VFO frequency if it is in band. Return true if it is in band. 
+}

@@ -1579,6 +1579,10 @@ void loop(void)
       case STATE_LSB_TX_INIT:
       {
         radio.mute();
+        if (radio.frequency>14350000)
+        {
+          si5351A.setRevFreq(radio.frequency,Si5351A::USB);
+        }
         radio.txEnable();
         radio.unmuteMic();
         radio_state = STATE_LSB_TX;
@@ -1587,6 +1591,10 @@ void loop(void)
       case STATE_USB_TX_INIT:
       {
         radio.mute();
+        if (radio.frequency>14350000)
+        {
+          si5351A.setRevFreq(radio.frequency,Si5351A::LSB);
+        }
         radio.txEnable();
         radio.unmuteMic();
         radio_state = STATE_USB_TX;
@@ -1595,6 +1603,10 @@ void loop(void)
       case STATE_CWL_TX_INIT:
       {
         radio.muteMic();
+        if (radio.frequency>14350000)
+        {
+          si5351A.setRevFreq(radio.frequency,Si5351A::CWU);
+        }
         radio.txEnable();
         if (radio.PTT()) delay(30);
         radio_state = STATE_CWL_TX;
@@ -1604,6 +1616,10 @@ void loop(void)
       case STATE_CWU_TX_INIT:
       {
         radio.muteMic();
+        if (radio.frequency>14350000)
+        {
+          si5351A.setRevFreq(radio.frequency,Si5351A::CWL);
+        }
         radio.txEnable();
         if (radio.PTT()) delay(30);
         cwtimeout = millis()+CW_TIMEOUT;
@@ -1613,6 +1629,10 @@ void loop(void)
       case STATE_DIGL_TX_INIT:
       {
         radio.mute();
+        if (radio.frequency>14350000)
+        {
+          si5351A.setRevFreq(radio.frequency,Si5351A::DIGU);
+        }
         radio.txEnable();
         radio.unmuteMic();
         radio_state = STATE_DIGL_TX;
@@ -1621,6 +1641,10 @@ void loop(void)
       case STATE_DIGU_TX_INIT:
       {
         radio.mute();
+        if (radio.frequency>14350000)
+        {
+          si5351A.setRevFreq(radio.frequency,Si5351A::DIGL);
+        }
         radio.txEnable();
         radio.unmuteMic();
         radio_state = STATE_DIGU_TX;
